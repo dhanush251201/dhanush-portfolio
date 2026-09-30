@@ -1,0 +1,31 @@
+---
+import Icon from './Icon.astro';
+import SocialLinks from './SocialLinks.astro';
+import { site } from '../data/site';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="mt-24 border-t border-line">
+  <div class="container-page flex flex-col items-center justify-between gap-6 py-10 text-sm text-subtle sm:flex-row">
+    <div class="text-center sm:text-left">
+      <p>© {year} {site.name}</p>
+      <p class="mt-1">
+        Built with <a class="link font-normal" href="https://astro.build" target="_blank" rel="noopener">Astro</a>{' · '}
+        <a class="link font-normal" href={site.repo} target="_blank" rel="noopener">Source</a>
+      </p>
+    </div>
+    <SocialLinks size={18} />
+    <a href="#top" class="inline-flex items-center gap-1.5 hover:text-fg" data-back-to-top>
+      Back to top <Icon name="arrow-up" size={14} />
+    </a>
+  </div>
+</footer>
+
+<script>
+  document.querySelector('[data-back-to-top]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0 });
+    document.querySelector<HTMLElement>('#main')?.focus({ preventScroll: true });
+  });
+</script>

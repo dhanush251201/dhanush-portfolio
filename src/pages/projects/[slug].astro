@@ -1,0 +1,167 @@
+---
+import { url } from '../../lib/url';
+import type { GetStaticPaths } from 'astro';
+import { Image } from 'astro:assets';
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { getProjects, type Project } from '../../lib/projects';
+
+export const getStaticPaths = (async () => {
+  const projects = await getProjects();
+  return projects.map((project, i) => ({
+    params: { slug: project.id },
+    props: {
+      project,
+      prev: projects[i - 1] ?? null,
+      next: projects[i + 1] ?? null,
+    },
+  }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  project: Project;
+  prev: Project | null;
+  next: Project | null;
+}
+
+const { project, prev, next } = Astro.props;
+const { Content } = await render(project);
+const d = project.data;
+const isPaper = d.tier === 'research';
+const fmt = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const backHref = url(isPaper ? '/#research' : '/#projects');
+---
+
+<BaseLayout title={isPaper ? d.title.split(':')[0] : d.title} description={d.summary} type="article">
+  <article class="container-page py-12 sm:py-16">
+    <a href={backHref} class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg">
+      <Icon name="arrow-left" size={15} /> Back to {isPaper ? 'research' : 'projects'}
+    </a>
+
+    <header class="mt-8 max-w-3xl">
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        {d.tags.map((t) => <span class="font-mono text-accent-text">{t}</span>)}
+        {d.status && <span class="rounded-full bg-accent-soft px-2 py-0.5 font-medium text-accent-text">{d.status}</span>}
+      </div>
+      <h1 class="mt-3 text-3xl font-semibold tracking-tight text-balance text-fg sm:text-5xl">{d.title}</h1>
+      <p class="mt-5 text-lg leading-relaxed text-muted">{d.summary}</p>
+
+      <div class="mt-8 flex flex-wrap gap-3">
+        {
+          d.paper && (
+            <a href={url(d.paper)} class="btn btn-primary" target="_blank" rel="noopener">
+              <Icon name="paper" size={16} /> Read the paper (PDF)
+            </a>
+          )
+        }
+        {
+          d.github && (
+            <a href={d.github} class="btn btn-primary" target="_blank" rel="noopener">
+              <Icon name="github" size={16} /> View code
+            </a>
+          )
+        }
+        {
+          d.demo && (
+            <a href={d.demo} class="btn btn-ghost" target="_blank" rel="noopener">
+              <Icon name="globe" size={16} /> Live demo
+            </a>
+          )
+        }
+      </div>
+    </header>
+
+    <div class="mt-12 grid gap-12 lg:grid-cols-[1fr_16rem]">
+      <div class="min-w-0">
+        {
+          d.cover && (
+            <Image
+              src={d.cover}
+              alt={d.coverAlt ?? `Screenshot of ${d.title}`}
+              width={1200}
+              class="card mb-10 w-full"
+              loading="eager"
+            />
+          )
+        }
+
+        {
+          d.metrics && (
+            <dl class="mb-10 grid gap-4 sm:grid-cols-3">
+              {d.metrics.map((m) => (
+                <div class="card flex flex-col-reverse justify-end gap-1 p-4">
+                  <dt class="text-sm leading-snug text-subtle">{m.label}</dt>
+                  <dd class="text-2xl font-semibold tracking-tight text-fg">{m.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )
+        }
+
+        <div class="prose-case max-w-[70ch]">
+          <Content />
+        </div>
+      </div>
+
+      <aside class="space-y-8 text-sm lg:sticky lg:top-24 lg:self-start">
+        <div>
+          <h2 class="font-semibold text-fg">Details</h2>
+          <dl class="mt-3 space-y-3">
+            {
+              d.role && (
+                <div>
+                  <dt class="text-subtle">Role</dt>
+                  <dd class="text-fg">{d.role}</dd>
+                </div>
+              )
+            }
+            {
+              d.venue && (
+                <div>
+                  <dt class="text-subtle">Venue</dt>
+                  <dd class="text-fg">{d.venue}</dd>
+                </div>
+              )
+            }
+            <div>
+              <dt class="text-subtle">Date</dt>
+              <dd class="text-fg"><time datetime={d.date.toISOString()}>{fmt.format(d.date)}</time></dd>
+            </div>
+          </dl>
+        </div>
+        <div>
+          <h2 class="font-semibold text-fg">Tech</h2>
+          <ul class="mt-3 flex flex-wrap gap-1.5">
+            {d.tech.map((t) => <li class="chip">{t}</li>)}
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+    <nav aria-label="More projects" class="mt-20 grid gap-4 border-t border-line pt-8 sm:grid-cols-2">
+      {
+        prev ? (
+          <a href={url(`/projects/${prev.id}/`)} class="card group p-5 transition hover:border-accent/50">
+            <span class="flex items-center gap-1.5 text-xs text-subtle">
+              <Icon name="arrow-left" size={13} /> Previous
+            </span>
+            <span class="mt-1 line-clamp-2 block font-medium text-fg group-hover:text-accent-text">{prev.data.title}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        next && (
+          <a href={url(`/projects/${next.id}/`)} class="card group p-5 text-right transition hover:border-accent/50">
+            <span class="flex items-center justify-end gap-1.5 text-xs text-subtle">
+              Next <Icon name="arrow-right" size={13} />
+            </span>
+            <span class="mt-1 line-clamp-2 block font-medium text-fg group-hover:text-accent-text">{next.data.title}</span>
+          </a>
+        )
+      }
+    </nav>
+  </article>
+</BaseLayout>

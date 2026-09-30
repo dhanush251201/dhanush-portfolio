@@ -1,0 +1,63 @@
+---
+import { url } from '../lib/url';
+import Icon from './Icon.astro';
+import SectionHeading from './SectionHeading.astro';
+import type { Project } from '../lib/projects';
+
+interface Props {
+  papers: Project[];
+}
+const { papers } = Astro.props;
+const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+---
+
+<section id="research" class="scroll-mt-20 border-y border-line bg-surface-2/40 py-20" aria-labelledby="research-title">
+  <div class="container-page">
+    <SectionHeading
+      id="research"
+      eyebrow="Research & writing"
+      title="Papers"
+      intro="Measurement studies that grew out of building localserver. Every number in them is regenerated from raw data by one script."
+    />
+
+    <div class="space-y-6">
+      {
+        papers.map((p) => (
+          <article class="reveal card p-6 sm:p-8">
+            <p class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-subtle">
+              <span class="inline-flex items-center gap-1.5 text-accent-text">
+                <Icon name="paper" size={14} /> {p.data.venue ?? 'Paper'}
+              </span>
+              <time datetime={p.data.date.toISOString()}>{fmt.format(p.data.date)}</time>
+              {p.data.role && <span>{p.data.role}</span>}
+            </p>
+            <h3 class="mt-3 text-xl font-semibold tracking-tight text-balance text-fg">{p.data.title}</h3>
+            <p class="mt-3 max-w-3xl text-muted">{p.data.summary}</p>
+
+            {p.data.metrics && (
+              <dl class="mt-6 grid gap-4 sm:grid-cols-3">
+                {p.data.metrics.map((m) => (
+                  <div class="flex flex-col-reverse justify-end gap-1 rounded-xl border border-line bg-surface-2/60 p-4">
+                    <dt class="text-sm leading-snug text-subtle">{m.label}</dt>
+                    <dd class="text-2xl font-semibold tracking-tight text-fg">{m.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+
+            <div class="mt-6 flex flex-wrap gap-3">
+              {p.data.paper && (
+                <a href={url(p.data.paper)} class="btn btn-primary" target="_blank" rel="noopener">
+                  <Icon name="paper" size={16} /> Read the paper (PDF)
+                </a>
+              )}
+              <a href={url(`/projects/${p.id}/`)} class="btn btn-ghost">
+                Summary <Icon name="arrow-right" size={16} />
+              </a>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>

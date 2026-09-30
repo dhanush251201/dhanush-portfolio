@@ -1,0 +1,31 @@
+---
+import Icon from './Icon.astro';
+import { socials } from '../data/site';
+
+interface Props {
+  size?: number;
+  class?: string;
+}
+const { size = 20, class: className = '' } = Astro.props;
+---
+
+<ul class={`flex items-center gap-1 ${className}`}>
+  {
+    socials.map((s) => {
+      const external = s.href.startsWith('http') || s.href.endsWith('.pdf');
+      return (
+        <li>
+          <a
+            href={s.href}
+            class="grid size-10 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-accent-text"
+            aria-label={s.label}
+            title={s.label}
+            {...(external ? { target: '_blank', rel: 'noopener' } : {})}
+          >
+            <Icon name={s.key} size={size} />
+          </a>
+        </li>
+      );
+    })
+  }
+</ul>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dhanush251201.github.io/dhanush-portfolio/sitemap-index.xml

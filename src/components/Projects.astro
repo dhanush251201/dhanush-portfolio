@@ -1,0 +1,88 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import ProjectCard from './ProjectCard.astro';
+import type { Project } from '../lib/projects';
+
+interface Props {
+  projects: Project[];
+}
+const { projects } = Astro.props;
+const featured = projects.filter((p) => p.data.tier === 'featured');
+const more = projects.filter((p) => p.data.tier === 'more');
+
+// Filter chips cover every tag used by the cards in this section.
+const filters = ['All', ...new Set([...featured, ...more].flatMap((p) => p.data.tags))];
+---
+
+<section id="projects" class="container-page scroll-mt-20 py-20" aria-labelledby="projects-title">
+  <SectionHeading
+    id="projects"
+    eyebrow="Projects"
+    title="Things I've built"
+    intro="Tools I use every day, built end to end. Each one has a write-up covering the problem, the design and what I learned."
+  />
+
+  <div class="mb-8 flex flex-wrap gap-2" role="group" aria-label="Filter projects by category" data-filters hidden>
+    {
+      filters.map((f, i) => (
+        <button
+          type="button"
+          data-filter={f}
+          aria-pressed={i === 0 ? 'true' : 'false'}
+          class="rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm text-muted transition-colors hover:text-fg aria-pressed:border-accent aria-pressed:bg-accent aria-pressed:text-accent-fg"
+        >
+          {f}
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2" data-grid>
+    {featured.map((p) => <ProjectCard project={p} />)}
+  </div>
+
+  {
+    more.length > 0 && (
+      <div data-more-block>
+        <h3 class="mt-16 mb-6 text-lg font-semibold text-fg">More projects</h3>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-grid>
+          {more.map((p) => (
+            <ProjectCard project={p} variant="compact" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  <p class="mt-8 hidden text-muted" data-empty>No projects in this category yet.</p>
+</section>
+
+<script>
+  const bar = document.querySelector<HTMLElement>('[data-filters]');
+  if (bar) {
+    bar.hidden = false; // filters are only useful with JS, so they start hidden
+    const buttons = bar.querySelectorAll<HTMLButtonElement>('[data-filter]');
+    const cards = document.querySelectorAll<HTMLElement>('#projects [data-tags]');
+    const moreBlock = document.querySelector<HTMLElement>('[data-more-block]');
+    const empty = document.querySelector<HTMLElement>('[data-empty]')!;
+
+    bar.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-filter]');
+      if (!btn) return;
+      const tag = btn.dataset.filter!;
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+
+      let shown = 0;
+      cards.forEach((card) => {
+        const match = tag === 'All' || card.dataset.tags!.split('|').includes(tag);
+        card.hidden = !match;
+        if (match) {
+          shown++;
+          card.classList.add('is-visible');
+        }
+      });
+      if (moreBlock) moreBlock.hidden = ![...moreBlock.querySelectorAll<HTMLElement>('[data-tags]')].some((c) => !c.hidden);
+      empty.classList.toggle('hidden', shown > 0);
+    });
+  }
+</script>

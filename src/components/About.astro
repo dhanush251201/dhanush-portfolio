@@ -1,0 +1,99 @@
+---
+import { url } from '../lib/url';
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Icon from './Icon.astro';
+import SectionHeading from './SectionHeading.astro';
+import { site } from '../data/site';
+import { education } from '../data/education';
+
+// Drop a photo at src/assets/avatar.(jpg|png|webp) and it replaces the initials.
+const avatars = import.meta.glob<{ default: ImageMetadata }>('../assets/avatar.{jpg,jpeg,png,webp}', { eager: true });
+const avatar = Object.values(avatars)[0]?.default;
+---
+
+<section id="about" class="container-page scroll-mt-20 py-20" aria-labelledby="about-title">
+  <SectionHeading id="about" eyebrow="About" title="A bit about me" />
+
+  <div class="reveal grid gap-12 md:grid-cols-[1fr_18rem]">
+    <div class="space-y-4 text-lg leading-relaxed text-muted">
+      <!-- Make this your own voice. Two or three short paragraphs is plenty. -->
+      <p>
+        I'm a software engineer and an MSE student in Computer and Information Science at the{' '}
+        <strong class="font-semibold text-fg">University of Pennsylvania</strong>, after a year as a software developer at{' '}
+        <strong class="font-semibold text-fg">IBM</strong>. I like the whole path a request takes, from the process that
+        starts a server, to the database behind it, to the interface someone clicks.
+      </p>
+      <p>
+        Lately that has meant building <a class="link" href={url('/projects/localserver/')}>localserver</a>, a scale-to-zero gateway
+        for a single laptop, and then writing two papers on what it taught me: where a Node.js cold start's time goes, and when an
+        idle server should go to sleep. Along the way I build the tools I need myself, like a job-search workspace with
+        Claude built in, a full pm2 dashboard, and a tracker I use as a TA for capstone teams.
+      </p>
+      <p>
+        I care about measuring before optimizing, local-first software that respects people's data, and writing things
+        down so the next person can pick them up.
+      </p>
+    </div>
+
+    <aside class="space-y-6">
+      <div class="card overflow-hidden">
+        {
+          avatar ? (
+            <Image src={avatar} alt={`Portrait of ${site.name}`} width={576} class="aspect-square w-full object-cover" loading="eager" />
+          ) : (
+            <div class="avatar-fallback grid aspect-square w-full place-items-center" aria-hidden="true">
+              <span class="font-mono text-6xl font-medium text-accent-text">{site.initials}</span>
+            </div>
+          )
+        }
+      </div>
+
+      <div>
+        <h3 class="flex items-center gap-2 text-sm font-semibold text-fg">
+          <Icon name="scholar" size={16} /> Education
+        </h3>
+        <ul class="mt-3 space-y-4">
+          {
+            education.map((e) => (
+              <li class="text-sm">
+                <p class="font-medium text-fg">
+                  {e.url ? (
+                    <a href={e.url} target="_blank" rel="noopener" class="hover:text-accent-text">
+                      {e.school}
+                    </a>
+                  ) : (
+                    e.school
+                  )}
+                </p>
+                <p class="text-muted">{e.degree}</p>
+                <p class="mt-0.5 font-mono text-xs text-subtle">
+                  {e.start} – {e.end}
+                </p>
+                <p class="font-mono text-xs text-subtle">
+                  {e.location}
+                  {e.gpa && <> · GPA {e.gpa}</>}
+                </p>
+                {e.details && (
+                  <ul class="mt-1.5 list-disc space-y-1 pl-4 text-muted">
+                    {e.details.map((d) => (
+                      <li>{d}</li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<style>
+  .avatar-fallback {
+    background:
+      radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%),
+      var(--surface-2);
+  }
+</style>

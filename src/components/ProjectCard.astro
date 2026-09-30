@@ -1,0 +1,85 @@
+---
+import { url } from '../lib/url';
+import { Image } from 'astro:assets';
+import Icon from './Icon.astro';
+import type { Project } from '../lib/projects';
+
+interface Props {
+  project: Project;
+  variant?: 'featured' | 'compact';
+}
+const { project, variant = 'featured' } = Astro.props;
+const { title, summary, tags, tech, github, demo, cover, coverAlt, metrics, status } = project.data;
+const href = url(`/projects/${project.id}/`);
+const compact = variant === 'compact';
+const shownTech = compact ? tech.slice(0, 4) : tech.slice(0, 6);
+---
+
+<article
+  class="reveal card group relative flex flex-col overflow-hidden transition hover:-translate-y-0.5 hover:border-accent/50"
+  data-tags={tags.join('|')}
+>
+  {
+    cover && !compact && (
+      <Image
+        src={cover}
+        alt={coverAlt ?? `Screenshot of ${title}`}
+        width={800}
+        class="aspect-[16/9] w-full border-b border-line object-cover object-top"
+      />
+    )
+  }
+
+  <div class={`flex flex-1 flex-col ${compact ? 'p-5' : 'p-6'}`}>
+    <div class="flex flex-wrap items-center gap-2 text-xs">
+      {tags.map((t) => <span class="font-mono text-accent-text">{t}</span>)}
+      {status && <span class="rounded-full bg-accent-soft px-2 py-0.5 font-medium text-accent-text">{status}</span>}
+    </div>
+
+    <h3 class={`mt-2 font-semibold tracking-tight text-fg ${compact ? 'text-lg' : 'text-xl'}`}>
+      <a href={href} class="after:absolute after:inset-0 after:content-['']">
+        {title}
+      </a>
+    </h3>
+    <p class="mt-2 flex-1 text-muted">{summary}</p>
+
+    {
+      !compact && metrics && (
+        <dl class="mt-5 grid grid-cols-3 gap-3 border-t border-line pt-4">
+          {metrics.slice(0, 3).map((m) => (
+            <div class="flex flex-col-reverse justify-end gap-0.5">
+              <dt class="text-xs leading-snug text-subtle">{m.label}</dt>
+              <dd class="font-semibold text-fg">{m.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )
+    }
+
+    <ul class="mt-5 flex flex-wrap gap-1.5" aria-label="Technologies">
+      {shownTech.map((t) => <li class="chip">{t}</li>)}
+      {tech.length > shownTech.length && <li class="chip">+{tech.length - shownTech.length}</li>}
+    </ul>
+
+    <div class="relative z-10 mt-5 flex flex-wrap items-center gap-4 text-sm font-medium">
+      <a href={href} class="inline-flex items-center gap-1 text-accent-text hover:underline">
+        Read more <Icon name="arrow-right" size={14} />
+        <span class="sr-only">about {title}</span>
+      </a>
+      {
+        github && (
+          <a href={github} target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-muted hover:text-fg">
+            <Icon name="github" size={15} /> Code<span class="sr-only"> for {title} on GitHub</span>
+          </a>
+        )
+      }
+      {
+        demo && (
+          <a href={demo} target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-muted hover:text-fg">
+            <Icon name="globe" size={15} /> Live demo
+          </a>
+        )
+      }
+    </div>
+  </div>
+</article>

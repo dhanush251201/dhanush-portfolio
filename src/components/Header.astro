@@ -1,0 +1,153 @@
+---
+import { url } from '../lib/url';
+import Icon from './Icon.astro';
+import { nav, site } from '../data/site';
+---
+
+<header class="sticky top-0 z-40 border-b border-transparent transition-colors" data-header>
+  <div class="container-page flex h-16 items-center justify-between gap-4">
+    <a href={url('/')} class="group flex items-center gap-2.5 font-semibold tracking-tight" aria-label={`${site.name}, home`}>
+      <span
+        class="grid size-8 place-items-center rounded-lg bg-accent font-mono text-xs font-medium text-accent-fg transition-transform group-hover:-rotate-6"
+        aria-hidden="true">{site.initials}</span
+      >
+      <span class="hidden sm:inline">{site.name}</span>
+    </a>
+
+    <nav aria-label="Primary" class="hidden md:block">
+      <ul class="flex items-center gap-1 text-sm">
+        {
+          nav.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                data-nav={item.id}
+                class="rounded-md px-3 py-2 text-muted transition-colors hover:text-fg aria-[current=true]:text-accent-text"
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="flex items-center gap-1">
+      <a href={site.resume} class="btn btn-ghost hidden !py-1.5 sm:inline-flex" target="_blank" rel="noopener">
+        <Icon name="resume" size={16} /> Resume
+      </a>
+      <button
+        type="button"
+        data-theme-toggle
+        class="grid size-10 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-fg"
+        aria-label="Toggle dark mode"
+      >
+        <Icon name="sun" class="hidden dark:block" />
+        <Icon name="moon" class="block dark:hidden" />
+      </button>
+      <button
+        type="button"
+        data-menu-button
+        class="grid size-10 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-fg md:hidden"
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      >
+        <Icon name="menu" class="menu-open" />
+        <Icon name="close" class="menu-close hidden" />
+      </button>
+    </div>
+  </div>
+
+  <nav id="mobile-menu" aria-label="Mobile" class="hidden border-t border-line bg-bg md:hidden" data-menu>
+    <ul class="container-page flex flex-col py-2">
+      {
+        nav.map((item) => (
+          <li>
+            <a href={item.href} data-nav={item.id} class="block rounded-md px-2 py-3 text-muted hover:text-fg aria-[current=true]:text-accent-text">
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+      <li>
+        <a href={site.resume} target="_blank" rel="noopener" class="block rounded-md px-2 py-3 text-muted hover:text-fg">Resume ↗</a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<style>
+  [data-header].is-scrolled {
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: saturate(1.4) blur(12px);
+    -webkit-backdrop-filter: saturate(1.4) blur(12px);
+    border-color: var(--border);
+  }
+  [data-header]:has([data-menu]:not(.hidden)) {
+    background: var(--bg);
+  }
+</style>
+
+<script>
+  const root = document.documentElement;
+  const header = document.querySelector<HTMLElement>('[data-header]')!;
+
+  // Theme toggle: saves an explicit choice; otherwise the OS setting wins.
+  document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
+    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try {
+      localStorage.setItem('theme', next);
+    } catch {}
+  });
+
+  // Mobile menu
+  const button = document.querySelector<HTMLButtonElement>('[data-menu-button]')!;
+  const menu = document.querySelector<HTMLElement>('[data-menu]')!;
+  const setMenu = (open: boolean) => {
+    menu.classList.toggle('hidden', !open);
+    button.setAttribute('aria-expanded', String(open));
+    button.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    button.querySelector('.menu-open')!.classList.toggle('hidden', open);
+    button.querySelector('.menu-close')!.classList.toggle('hidden', !open);
+  };
+  button.addEventListener('click', () => setMenu(menu.classList.contains('hidden')));
+  menu.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('a')) setMenu(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !menu.classList.contains('hidden')) {
+      setMenu(false);
+      button.focus();
+    }
+  });
+
+  // Solid header once the page scrolls
+  const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 8);
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // Scroll-spy: highlight the section currently in view
+  const links = document.querySelectorAll<HTMLAnchorElement>('[data-nav]');
+  const sections = [...new Set([...links].map((l) => l.dataset.nav!))]
+    .map((id) => document.getElementById(id))
+    .filter((s): s is HTMLElement => !!s);
+  let current = '';
+  const spy = () => {
+    // The active section is the last one whose top has passed 40% of the viewport.
+    const line = window.innerHeight * 0.4;
+    let id = '';
+    for (const s of sections) if (s.getBoundingClientRect().top <= line) id = s.id;
+    // At the very bottom, the last section wins even if it is short.
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) id = sections.at(-1)?.id ?? id;
+    if (id === current) return;
+    current = id;
+    links.forEach((l) => (l.dataset.nav === id ? l.setAttribute('aria-current', 'true') : l.removeAttribute('aria-current')));
+  };
+  if (sections.length) {
+    spy();
+    window.addEventListener('scroll', spy, { passive: true });
+    window.addEventListener('resize', spy, { passive: true });
+  }
+</script>

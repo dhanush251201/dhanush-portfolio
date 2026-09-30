@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import About from '../components/About.astro';
+import Experience from '../components/Experience.astro';
+import Projects from '../components/Projects.astro';
+import Research from '../components/Research.astro';
+import Skills from '../components/Skills.astro';
+import Contact from '../components/Contact.astro';
+import { getProjects } from '../lib/projects';
+
+const projects = await getProjects();
+const papers = projects.filter((p) => p.data.tier === 'research');
+const built = projects.filter((p) => p.data.tier !== 'research');
+
+const stats = [
+  { value: String(built.length), label: 'projects built' },
+  { value: '1', label: 'year of experience' },
+  { value: String(papers.length), label: 'research papers in progress' },
+];
+---
+
+<BaseLayout>
+  <Hero stats={stats} />
+  <About />
+  <Experience />
+  <Projects projects={built} />
+  <Research papers={papers} />
+  <Skills />
+  <Contact />
+</BaseLayout>
