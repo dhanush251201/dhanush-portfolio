@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
+    "dev:local": "SITE=http://portfolio.localhost BASE=/ astro dev",
     "build": "astro check && astro build",
+    "build:local": "SITE=http://portfolio.localhost BASE=/ astro build",
     "preview": "astro preview",
     "check": "astro check"
   },

@@ -10,9 +10,18 @@ Node 22.12 or newer.
 ```bash
 npm install
 npm run dev       # http://localhost:4321/dhanush-portfolio/ with hot reload
-npm run build     # type-check, then build to dist/
+npm run build     # type-check, then build to dist/ for GitHub Pages
 npm run preview   # serve the built dist/ locally
 ```
+
+To host it on localserver at http://portfolio.localhost/ (served from the root, not a subpath):
+
+```bash
+npm run build:local   # build to dist/ with SITE=http://portfolio.localhost and BASE=/
+npm run dev:local     # same, with hot reload
+```
+
+In localserver, point the app's static service at `dist/` and set its build command to `npm run build:local`.
 
 ## Where the content lives
 
@@ -67,12 +76,13 @@ served at **https://dhanush251201.github.io/dhanush-portfolio/**.
 - Each push to `main` runs `.github/workflows/deploy.yml`, which builds the site and publishes it to GitHub Pages.
 - One-time setup: in the repository, go to **Settings → Pages → Build and deployment → Source** and choose **GitHub Actions**.
 
-Because the site is served from a subpath, `base: '/dhanush-portfolio'` is set in `astro.config.mjs`, and internal
-links go through the `url()` helper in `src/lib/url.ts`. In Markdown, link to other projects relatively, e.g.
-`[localserver](../localserver/)`.
+Because the site is served from a subpath, `astro.config.mjs` defaults to `base: '/dhanush-portfolio'`, and
+internal links go through the `url()` helper in `src/lib/url.ts`. In Markdown, link to other projects relatively,
+e.g. `[localserver](../localserver/)`.
 
-To move the site to the root (the `dhanush251201.github.io` repository or a custom domain), remove `base` from
-`astro.config.mjs`. For a custom domain, also add `public/CNAME` and set `site` to the domain.
+The `SITE` and `BASE` environment variables override those defaults for any other host (see `build:local` above).
+To move the site to the root of GitHub Pages (the `dhanush251201.github.io` repository) or a custom domain, change
+the defaults in `astro.config.mjs`. For a custom domain, also add `public/CNAME`.
 
 ## Optional analytics
 
